@@ -9,7 +9,7 @@ const port = 7700;
 const pool = new Pool({
   user: 'shopuser',
   host: 'localhost',
-  database: 'cybershop',
+  database: 'shop',
   password: 'password',
   port: 5432, // or the port of your database server
 });
@@ -98,12 +98,12 @@ app.post('/users/create', async (req, res) => {
 
 //добавление нового товара
 app.post('/newItem', async (req, res) => {
-  const { name, description, cost, count } = req.body;
+  const { name, description, cost, count, category, image } = req.body;
   const client = await pool.connect();
   try {
     const result = await client.query(
-      'SELECT add_item($1, $2, $3, $4)',
-      [name, description, cost, count]
+      'SELECT add_item($1, $2, $3, $4, $5, $6)',
+      [name, description, cost, count, category, image]
     );
     console.log(`New item added with name ${name}`);
     res.status(200).send(result.rows);
