@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const { Pool } = require('pg');
+const crypto = require('crypto');
 
 const cors=require('cors')
 const app = express();
@@ -24,8 +25,9 @@ app.use(express.urlencoded({ extended: true }));
 app.post('/login', async (req, res) => {
   const { login, password } = req.body;
   console.log(login,password);
+  const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
  const query="select * from login($1,$2)"
- const values=[login,password];
+ const values=[login,passwordHash];
 
   try {
     console.log("try");
@@ -73,7 +75,7 @@ app.get('/showorders', async (req, res) => {
 //создание пользователя (регистрация)
 app.post('/users/create', async (req, res) => {
   const { name, password, phonenumber,login,role="customer" } = req.body;
-
+  const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
   try {
     const client = await pool.connect();
     const exists = await client.query(
@@ -86,7 +88,7 @@ app.post('/users/create', async (req, res) => {
     }
     const result = await client.query(
       'INSERT INTO users (name, password, phonenumber,login,role) VALUES ($1, $2, $3, $4,$5) RETURNING *',
-      [name, password, phonenumber,login,role]
+      [name, passwordHash, phonenumber,login,role]
     );
     client.release();
     res.status(201).json(result.rows[0]);
